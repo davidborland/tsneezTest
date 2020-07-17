@@ -14,9 +14,31 @@
   <h1 id="header">tsneez Test</h1>
 </div>
 
-<div class="container-fluid text-center" style="width: 1200px">
+<div class="container-fluid" style="width: 1200px">
   <div class="row">
-    <div class="col-12">
+    <div class="col-2 text-left">
+      <div class="form-group">
+        <label for="thetaInput">Theta</label>
+        <input
+          id="thetaInput"
+          type="number"
+          class="form-control"
+          min=0.5
+          max=50
+          step=0.5 />
+      </div>
+      <div class="form-group">
+        <label for="perplexityInput">Perplexity</label>
+        <input
+          id="perplexityInput"
+          type="number"
+          class="form-control"
+          min=1
+          max=200
+          step=1 />
+      </div>
+    </div>
+    <div class="col-10 text-center">
       <svg></svg>
     </div>
   </div>
@@ -24,16 +46,33 @@
 
 <script type="text/javascript">
 
-const width = 1000;
-const height = 1000;
-
 const svg = d3.select("svg")
-    .attr("width", width)
-    .attr("height", height);
+    .attr("width", "100%");
+
+// tsneez
+const options = {
+  theta: 10,
+  perplexity: 30
+};
+const ts = new tsneez.TSNEEZ(options);
+
+let vectors = [];
+
+d3.select("#thetaInput")
+    .attr("value", options.theta)
+    .on("change", function() {
+      options.theta = this.value;
+      ts.initData(vectors);
+    });
+
+d3.select("#perplexityInput")
+    .attr("value", options.perplexity)
+    .on("change", function() {
+      options.perplexity = this.value;
+      ts.initData(vectors);
+    });
 
 d3.csv("data/houseprices.csv").then(data => {
-  console.log(data);
-
   // Filter columns
   const columns = data.columns.filter(column => {
     if (column === "Id") return false;
@@ -46,8 +85,6 @@ d3.csv("data/houseprices.csv").then(data => {
 
     return true;
   });
-
-  console.log(columns);
 
   // Filter data
   data = data.filter(d => {
@@ -63,8 +100,6 @@ d3.csv("data/houseprices.csv").then(data => {
     return true;
   });
 
-  console.log(data);
-
   // Normalize
   columns.forEach(column => {
     const extent = d3.extent(data, d => d[column]);
@@ -75,18 +110,9 @@ d3.csv("data/houseprices.csv").then(data => {
   });
 
   // Vectorize
-  const vectors = data.map(d => {
+  vectors = data.map(d => {
     return columns.map(column => d[column]);
   });
-
-  console.log(vectors);
-
-  // tsneez
-  const options = {
-    theta: 10,
-    perplexity: 30
-  };
-  const ts = new tsneez.TSNEEZ(options);
 
   ts.initData(vectors);
 
@@ -98,6 +124,10 @@ d3.csv("data/houseprices.csv").then(data => {
 });
 
 function draw(Y) {
+  const width = parseInt(svg.style("width"), 10);
+  const height = width;
+  svg.attr("height", height);
+
   const n = Y.shape[0];
 
   const points = [];
@@ -110,10 +140,11 @@ function draw(Y) {
   }
 
   const r = 3;
+  const margin = r + 1;
 
   const xScale = d3.scaleLinear()
       .domain(d3.extent(points, d => d.x))
-      .range([r, width - r]);
+      .range([r + margin, width - margin]);
       
   const yScale = d3.scaleLinear()
       .domain(d3.extent(points, d => d.y))
