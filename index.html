@@ -83,22 +83,17 @@ d3.csv("data/houseprices.csv").then(data => {
 
   // tsneez
   const options = {
-    theta: 0.5,
+    theta: 20,
     perplexity: 30
   };
   const ts = new tsneez.TSNEEZ(options);
 
   ts.initData(vectors);
 
-  const steps = 1000;
-  let i = 0; 
-
   const timer = setInterval(() => {
     ts.step();
 
     draw(ts.Y);
-
-    if (i++ >= steps) clearInterval(timer);
   });
 });
 
