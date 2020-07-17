@@ -54,22 +54,39 @@ const options = {
   theta: 10,
   perplexity: 30
 };
-const ts = new tsneez.TSNEEZ(options);
+let ts = new tsneez.TSNEEZ(options);
 
 let vectors = [];
+
+let timer = -1;
+
+let step = () => {
+  ts.step();
+  draw(ts.Y);
+};
 
 d3.select("#thetaInput")
     .attr("value", options.theta)
     .on("change", function() {
+      clearInterval(timer);
+
       options.theta = this.value;
+      ts = new tsneez.TSNEEZ(options);
       ts.initData(vectors);
+
+      timer = setInterval(step);
     });
 
 d3.select("#perplexityInput")
     .attr("value", options.perplexity)
     .on("change", function() {
+      clearInterval(timer);
+
       options.perplexity = this.value;
+      ts = new tsneez.TSNEEZ(options);
       ts.initData(vectors);
+
+      timer = setInterval(step);
     });
 
 d3.csv("data/houseprices.csv").then(data => {
@@ -116,11 +133,7 @@ d3.csv("data/houseprices.csv").then(data => {
 
   ts.initData(vectors);
 
-  const timer = setInterval(() => {
-    ts.step();
-
-    draw(ts.Y);
-  });
+  timer = setInterval(step);
 });
 
 function draw(Y) {
